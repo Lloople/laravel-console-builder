@@ -1,0 +1,34 @@
+{
+    "name": "lloople/laravel-console-builder",
+    "description": "Build simple query statements from your command line",
+    "keywords": ["laravel", "console", "command", "builder"],
+    "type": "library",
+    "require": {
+        "laravel/framework": "^5.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.5",
+        "orchestra/testbench": "^3.5"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Llop",
+            "email": "d.lloople@icloud.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload" : {
+        "psr-4": {
+            "Lloople\\ConsoleBuilder\\" : "src/",
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Lloople\\ConsoleBuilder\\Providers\\ConsoleBuilderCommandsProvider"
+            ]
+        }
+    }
+}
