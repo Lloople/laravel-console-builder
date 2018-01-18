@@ -2,12 +2,24 @@
 
 namespace Tests;
 
+use App\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use \Lloople\ConsoleBuilder\Providers\ConsoleBuilderCommandsProvider;
 
 use Orchestra\Testbench\TestCase;
 
 class DeleteCommandTest extends TestCase
 {
+
+    use RefreshDatabase;
+
+    public function setUp()
+    {
+        parent::setUp();
+
+        $this->loadLaravelMigrations('testing');
+
+    }
 
     protected function getPackageProviders($app)
     {
@@ -17,11 +29,17 @@ class DeleteCommandTest extends TestCase
     }
 
     /** @test */
-    public function can_run()
+    public function can_delete_single_record_by_id()
     {
 
-        $this->artisan('builder:delete', ['model' => 'App\User']);
+        \DB::table('users')->insert([
+            'id' => 1,
+            'name' => 'Dummy',
+            'email' => 'dummy@test.com',
+            'password' => bcrypt('dummy')
+        ]);
+        $this->artisan('builder:delete', ['model' => 'App\User', '--id' => 1]);
 
-        $this->assertTrue(true);
+        $this->assertDatabaseMissing('users', ['id' => 1]);
     }
 }
