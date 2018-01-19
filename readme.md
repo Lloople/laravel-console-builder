@@ -10,4 +10,4 @@ php artisan builder:delete App\Models\Post --where="title" --like="Dummy"
 
 # Credits
 
-- Thanks to [Dylan](https://twitter.com/DPC_22) DPC who suggested this to me 🙂
+- Thanks to [Dylan DPC](https://github.com/Dylan-DPC) who suggested this to me 🙂
