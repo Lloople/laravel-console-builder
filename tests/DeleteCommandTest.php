@@ -3,9 +3,8 @@
 namespace Tests;
 
 use App\User;
+use Illuminate\Database\Eloquent\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use \Lloople\ConsoleBuilder\Providers\ConsoleBuilderCommandsProvider;
-
 use Orchestra\Testbench\TestCase;
 
 class DeleteCommandTest extends TestCase
@@ -19,27 +18,30 @@ class DeleteCommandTest extends TestCase
 
         $this->loadLaravelMigrations('testing');
 
-    }
+        $this->app->make(Factory::class)->load('tests/factories');
 
-    protected function getPackageProviders($app)
-    {
-        return [
-            ConsoleBuilderCommandsProvider::class,
-        ];
     }
 
     /** @test */
     public function can_delete_single_record_by_id()
     {
+        $user = factory(User::class)->create();
 
-        \DB::table('users')->insert([
-            'id' => 1,
-            'name' => 'Dummy',
-            'email' => 'dummy@test.com',
-            'password' => bcrypt('dummy')
+        $command = \Mockery::mock('\Lloople\ConsoleBuilder\Commands\DeleteCommand[confirm]');
+
+        $command->shouldReceive('confirm')
+            ->once()
+            ->with('Are you sure you want to continue?')
+            ->andReturn('yes');
+
+        $this->app['Illuminate\Contracts\Console\Kernel']->registerCommand($command);
+
+        $this->artisan('builder:delete', [
+            'model' => 'App\User',
+            '--id' => $user->id,
+            '--no-interaction' => true
         ]);
-        $this->artisan('builder:delete', ['model' => 'App\User', '--id' => 1]);
 
-        $this->assertDatabaseMissing('users', ['id' => 1]);
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
     }
 }
