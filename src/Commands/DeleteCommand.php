@@ -2,37 +2,39 @@
 
 namespace Lloople\ConsoleBuilder\Commands;
 
-use Illuminate\Console\Command;
-
-class DeleteCommand extends Command
+class DeleteCommand extends BuilderCommand
 {
-    protected $signature = 'builder:delete {model} {--id=} {--where=} {--like=} {--equals=} {--delete-all} ';
+
+    protected $signature = 'builder:delete 
+    {model : The model to query of} 
+    {--find= : Search a single record by primary key} 
+    {--where= : Filter the records with a where clause} 
+    {--like= : Filter by `like`} 
+    {--equals= : Filter by exact match} 
+    {--delete-all : Delete all records found}';
 
     protected $description = 'Delete database records matching the query';
 
-    public function __construct()
+    public function executeStatement()
     {
-        parent::__construct();
-    }
+        $records = $this->hasOption('find')
+            ? $this->find()
+            : $this->search();
 
-    public function handle()
-    {
-        if ($this->hasOption('id')) {
-            $this->deleteById();
+        if (! $records->count()) {
+            $this->error("No records were found.");
+
+            return;
         }
-    }
 
-    public function deleteById()
-    {
-        $model = ($this->argument('model'))::findOrFail($this->option('id'));
+        $this->info("You're about to delete these records:");
 
-        $this->info("You're about to delete the model:");
-        $this->table(array_keys($model->toArray()), [array_values($model->toArray())]);
+        $this->table(array_keys($records->first()->toArray()), array_values($records->toArray()));
 
         if ($this->confirm("Are you sure you want to continue?")) {
-            $model->delete();
-            $this->info("Model deleted successfully.");
+            $records->each->delete();
+            $this->info("Models deleted successfully.");
         }
-
     }
+
 }

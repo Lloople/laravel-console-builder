@@ -27,7 +27,63 @@ class DeleteCommandTest extends TestCase
     {
         $user = factory(User::class)->create();
 
-        $command = \Mockery::mock('\Lloople\ConsoleBuilder\Commands\DeleteCommand[confirm]');
+        $this->registerConfirmCommand('DeleteCommand');
+
+        $this->artisan('builder:delete', [
+            'model' => 'App\User',
+            '--find' => $user->id,
+            '--no-interaction' => true
+        ]);
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
+
+    /** @test */
+    public function can_delete_multiple_records_with_like()
+    {
+        factory(User::class, 2)->create(['name' => 'John '.str_random(4)]);
+        factory(User::class, 2)->create(['name' => 'Doe '.str_random(4)]);
+
+        $this->registerConfirmCommand('DeleteCommand');
+
+        $this->artisan('builder:delete', [
+            'model' => 'App\User',
+            '--where' => 'name',
+            '--like' => 'John',
+            '--no-interaction' => true
+        ]);
+
+        $this->assertCount(0, User::where('name', 'like', '%John%')->get());
+        $this->assertCount(2, User::all());
+    }
+
+    /** @test */
+    public function can_delete_multiple_records_with_equals()
+    {
+        factory(User::class, 2)->create(['name' => 'John']);
+        factory(User::class, 2)->create(['name' => 'Doe']);
+
+        $this->registerConfirmCommand('DeleteCommand');
+
+        $this->artisan('builder:delete', [
+            'model' => 'App\User',
+            '--where' => 'name',
+            '--like' => 'John',
+            '--no-interaction' => true
+        ]);
+
+        $this->assertCount(0, User::where('name', 'John')->get());
+        $this->assertCount(2, User::all());
+    }
+
+    /**
+     * Register the mock for the command to interact with confirmation.
+     *
+     * @param string $commandName
+     */
+    private function registerConfirmCommand(string $commandName)
+    {
+        $command = \Mockery::mock("\Lloople\ConsoleBuilder\Commands\\{$commandName}[confirm]");
 
         $command->shouldReceive('confirm')
             ->once()
@@ -35,13 +91,5 @@ class DeleteCommandTest extends TestCase
             ->andReturn('yes');
 
         $this->app['Illuminate\Contracts\Console\Kernel']->registerCommand($command);
-
-        $this->artisan('builder:delete', [
-            'model' => 'App\User',
-            '--id' => $user->id,
-            '--no-interaction' => true
-        ]);
-
-        $this->assertDatabaseMissing('users', ['id' => $user->id]);
     }
 }
